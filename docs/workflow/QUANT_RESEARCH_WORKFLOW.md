@@ -1,96 +1,120 @@
-# 跨资产高频/中频量化策略研发、双引擎回测与防过拟合工业级工作流规范
+# 跨资产高频/中频量化策略研发、双引擎回测与防过拟合工业级工作流规范 (v3.0 终极收敛版)
 
-本规范固化了本项目自数据拉取、环境侦测、策略转译、多 Agent/多引擎并发回测、反过拟合审计至最终蒙特卡洛压力测试的完整工程闭环。
+本规范固化了自数据拉取、环境侦测、策略转译、多 Agent/多引擎并发回测、**真实资产资金冲突与机会留存模拟**、**反过拟合审计** 至 **双向终止收敛状态判定** 的完整工业级工程闭环。
 
 ---
 
-## 阶段一：环境探查、资源探测与依赖自愈机制 (Phase 1: Environment & Dependency Auto-Discovery)
+## 🎯 核心指导思想：Agent 多轮迭代的双向终局收敛状态 (Dual Convergence States)
 
-在启动任何回测或因子挖掘前，智能体必须执行“探针序列”，并在缺失依赖时遵循确定性源拉取：
+智能体（Agent Swarm）在依据本工作流进行策略挖掘、特征工程、撮合检验与多轮迭代优化时，**必须且只能收敛至以下两种最终确定性结论之一**，严禁无限期调参或给出模糊结论：
 
 ```mermaid
 graph TD
-    A[执行环境与硬件探针] --> B{缺少数据/包/框架?}
-    B -- 缺少回测数据 --> C[从 multi-asset-ohlcv Release 源定向拉取]
-    B -- 缺少回测框架 --> D[集成 QuantCell 与 NautilusTrader]
-    B -- 缺少Agent研发底座 --> E[接入 微软 RD-Agent 与 Qlib 因子库]
-    B -- 缺少技能与工作流模块 --> F[加载 .agents/skills/ 专属技能资产]
-    B -- 环境完备 --> G[进入阶段二：策略转译与因子研发]
+    Start[初始策略 Hypothesis / 代码转译] --> Backtest[全流程无偏回测: 独立资金 vs 共享资金池]
+    Backtest --> Audit[反过拟合审计 & 真实撮合摩擦测试]
+    Audit --> Decision{多轮迭代后的收敛状态判定}
+    
+    Decision -->|收敛状态 1: 证伪归零| Abandon[【终局 1: 策略无研究价值】<br/>扣除真实摩擦后无法正期望, 资金冲突下期望衰减, 不具备作为量化资产库策略的资格]
+    Decision -->|收敛状态 2: 鲁棒突围| Deploy[【终局 2: 严格防过拟合下具备稳定正期望】<br/>全资产无偏检验通过, 事前理论约束下提升实盘 PnL, 具备实盘配置价值]
 ```
 
-### 1.1 数据缺失时：定向拉取源与分片加载
-- **数据源仓库**: `https://github.com/JasonleeQAQ/multi-asset-ohlcv`
-- **直接资产 Release 源**: `https://github.com/JasonleeQAQ/multi-asset-ohlcv/releases/download/1.0.0/{SYMBOL}USDTraw_data.zip`
-- **外汇/大宗商品**: `xauusdraw_data.zip`, `usousdraw_data.zip`, `gbpusdraw_data.zip`
-- **防爆内存拉取规范**:
-  - 严禁全量解压所有周期；
-  - 仅按需过滤提取目标周期（如 `15m`, `1h`, `5m`）；
-  - 使用流式内存分块读取（`pyarrow` / `pandas.read_parquet`）并在每轮切片计算后触发 `gc.collect()`。
+### 状态 1：【该策略没有研究价值 (No Research Value)】
+- **判定标准**:
+  1. 在扣除真实的 Maker/Taker 费率及动态滑点后，策略在几乎任何周期与参数下都不具备大幅稳定盈利的可能性；
+  2. 策略依赖于“触碰即成交”的排队幻觉，或依赖“同 Bar 优先止盈”的虚假红利；
+  3. 当多个标的共享真实资金池并预留机会现金时，期望收益被频繁止损严重侵蚀；
+  4. 样本外（OOS）表现与样本内（IS）严重脱节，且参数高原极其狭窄；
+- **产出动作**: **出具终极证伪报告，封存策略，坚决拒绝上线实盘，不浪费量化公司任何算力与资金**。
 
-### 1.2 回测框架与算法库查找源
-- **NautilusTrader (高精度纳秒事件撮合)**:
-  - 仓库: `https://github.com/nautechsystems/nautilus_trader`
-  - 适用: 订单簿深度回测、Maker/Taker 真实挂单机制撮合、纳秒时序对齐。
-- **QuantCell (事件驱动/轻量化撮合底座)**:
-  - 仓库: `https://github.com/pengwow/QuantCell`
-  - 适用: 基于 `axon_quant` 高性能 Rust 内核的资金曲线与截面调度。
-- **微软 Qlib (高维 Alpha 因子库)**:
-  - 仓库: `https://github.com/microsoft/qlib`
-  - 适用: Alpha101 / Alpha158 因子体系构建、截面因子 IC/IR 分析、波动率与流动性特征抽取。
-- **微软 RD-Agent (量化研发自动化智能体架构)**:
-  - 研报与规范: `https://www.microsoft.com/en-us/research/articles/rd-agent-quant/`
-  - 适用: Hypothesis（因子假设） $\to$ Coding（向量化实现） $\to$ Evaluation（事件检验） $\to$ Feedback Loop（自动剪枝）。
+### 状态 2：【该策略在严格避免过拟合的情况下能够合理优化提升 PnL】
+- **判定标准**:
+  1. 绝不依赖事后挑选优势品种（Zero Cherry-Picking），在全量目标标的池上展现出统计显著的正期望 Alpha；
+  2. 引入事前（Ex-Ante）理论约束（如 Credal 狄利克雷认知不确定性自适应拒单），约束规则在完全未见的样本外呈现严格单调的减亏/增益效果；
+  3. 在极度悲观的撮合假设下（盘口穿透成交 + 同 Bar 优先止损），盈亏比与净值依然稳健；
+  4. 在共享资金池（最多 2 仓并发，留存 50% 机会资金）下，依然具备低回撤的复利增长能力；
+- **产出动作**: **交付完整的生产级代码、风控参数矩阵与可解释性研报，列为量化机构的实盘配置子策略之一**。
 
 ---
 
-## 阶段二：策略规范转译与微观结构因子提取 (Phase 2: Strategy Adaptation)
+## 阶段一：标的范围锁定与资金占用真实性反解 (Phase 1: Scope & Position Sizing Reverse-Engineering)
 
-将 SMC（Smart Money Concepts）或任意 Pine Script / 伪代码策略转译为标准引擎完全读懂的数据结构：
-1. **统一特征输出接口**:
-   - `Swing High/Low` 枢轴极值点检测（自适应周期 $L \in [5, 10]$）；
-   - `Order Block (OB)` 订单块标记（伴随成交量倍数 $V_{ratio} \ge 1.3 \sim 1.5$）；
-   - `Fair Value Gap (FVG)` 公允价值缺口（$Gap \ge 0.4 \times ATR$）；
-   - `Liquidity Sweep` 假突破扫损识别（$High_t > HH_{t-1} \land Close_t < HH_{t-1}$）；
-   - `Confluence Score` 多因子连续打分映射（0 ~ 100分）。
-2. **非对称多空与早期保本缓冲机制 (Early BE Buffer)**:
-   - 浮盈达 $0.7R \sim 0.8R$ 时，将止损价上移至 $\text{Entry} + 0.15 \times ATR$（多头）或下移至 $\text{Entry} - 0.15 \times ATR$（空头），锁定微利防止震荡扫损。
+### 1.1 标的范围锁定原则
+- **严格遵循策略作者声明的适用资产范围**：以主要加密货币（BTC, ETH, BNB, SOL）为核心；
+- **坚决拒绝事后挑选（Anti-Cherry-Picking）**：不准在看到回测盈亏后剔除亏损标的。所有适用标的必须作为一个不可分割的横截面整体评估。
 
----
-
-## 阶段三：多 Agent 并行滚动窗口回测 (Phase 3: Walk-Forward Backtesting)
-
-为保证统计有效性与防过拟合，统一执行**自然年滚动窗口（Natural-Year Walk-Forward Split）**：
-
-| 切片属性 | 数据比例 | 核心目标 | 约束条件 |
-| :--- | :---: | :--- | :--- |
-| **样本内 (In-Sample, IS)** | **80%** | 参数拟合、因子有效性初步筛查 | 必须计入完整手续费与滑点 |
-| **样本外 (Out-of-Sample, OOS)** | **20%** | 策略真实泛化能力审计 | 冻结所有超参数，严格零前视偏差 (Look-ahead Free) |
-
-- **费用与冲击模型**:
-  - **Taker 费率**: 0.05% (5 bps)；
-  - **Maker 费率**: 0.02% (2 bps)；
-  - **滑点冲击**: 0.05% (5 bps)；
-  - **动态仓位**: 严格单笔风险暴露 2.0%：$\text{Size} = \frac{\text{Equity} \times 2\%}{\text{StopDistance}}$。
+### 1.2 资金动用比例公式反解（固定风险模型）
+量化策略源码必须逐行审计其仓位规模（Size）的真实定义：
+$$
+\text{单笔风险敞口 (Risk Budget)} = \text{实时净值 (Equity)} \times 1.0\% \sim 2.0\%
+$$
+$$
+\text{开仓币数 (Size)} = \frac{\text{单笔风险敞口}}{|\text{入场价} - \text{止损价}|}
+$$
+$$
+\text{名义资金动用比例} = \frac{\text{Size} \times \text{入场价}}{\text{实时净值}} = \frac{\text{风险比例 (\%)}}{\text{止损幅度 (\%)} }
+$$
+- **波动率反比特性**: 止损窄时杠杆放大，止损宽时杠杆缩小；必须设立 **4.0x 最大名义杠杆安全硬截断**。
 
 ---
 
-## 阶段四：防过拟合与极端风险压力测试 (Phase 4: Anti-Overfitting & Robustness)
+## 阶段二：双资金制度对比体系 (Phase 2: Dual Capital Allocation Regimes)
 
-本工作流强制要求执行三层防过拟合与压力测试体系：
-1. **跨资产横截面泛化测试 (Cross-Asset Validation)**:
-   - 策略必须在加密主流币（BTC, ETH, SOL, BNB, NEAR）与传统外汇/商品（XAUUSD, USOUSD, GBPUSD）跨资产池同步比对，检验策略是否仅在特定高波动资产上伪盈利。
-2. **2,000 次蒙特卡洛 Bootstrap 重采样压力测试 (Monte Carlo Simulation)**:
-   - 从样本外真实成交交易序列中随机有放回/无放回重采样 2000 条资金演进路径（每条 200 笔交易）；
-   - 输出 **破产概率 (Probability of Ruin)**（净值回撤超 50% 的比例，强制目标 = 0.00%）；
-   - 计算 **95% 置信度最大回撤**、**99% 极端尾部回撤**、**95% 在险价值 (VaR 95%)** 与 **95% 条件在险价值 (CVaR 95%)**。
-3. **参数敏感度高原分析 (Parameter Plateau)**:
-   - 阈值在 $\pm 10\%$ 浮动时，收益曲线不得发生悬崖式跌落。
+严禁将多个标的的交易次数简单相加！必须在真实时间戳事件队列（Event-Driven Queue）下分别测试两版资金模型：
+
+```mermaid
+graph LR
+    subgraph 模式 A: 独立资金池 (Isolated)
+        AccBTC[BTC: 1,000 USD] --> T1[独立交易]
+        AccETH[ETH: 1,000 USD] --> T2[独立交易]
+        AccSOL[SOL: 1,000 USD] --> T3[独立交易]
+        AccBNB[BNB: 1,000 USD] --> T4[独立交易]
+    end
+
+    subgraph 模式 B: 共享资金池 (Shared)
+        Pool[单一共享账户 1,000 USD] --> Gate{并发控制 & 机会留存}
+        Gate -->|已开仓位 < 2| Exec[允许开仓 占用 <= 50% 资金]
+        Exec --> Reserve[保持至少 50% 现金留存 随时等待新机会]
+        Gate -->|已开仓位 >= 2| Lockout[锁定拒单 严禁超额加仓 规避多币共振暴跌]
+    end
+```
+
+1. **版本 A：独立资金池 (Isolated Capital Pool)**:
+   - 每个标的各自分配独立的 $1,000 USD，完全独立记账，用于测试单一标的的纯 Alpha 质量。
+2. **版本 B：共享资金池与机会留存机制 (Shared Capital Pool with Opportunity Reserve)**:
+   - 全部目标标的共享单一 $1,000 USD 账户；
+   - **严格并发上限与流动性留存**：**最大允许 2 笔并发持仓（Max Concurrent Positions = 2）**；
+   - **单笔占用上限 50%**，**永远至少保留 50% 现金流动性**，随时等待其他标的市场出现更高确信度的机会；
+   - 记录因资金占用而错失的交易笔数（Opportunity Lockout Rate），真实评估策略容量瓶颈与相关性挤压风险。
 
 ---
 
-## 阶段五：产物归档与 GitHub 自动化交付 (Phase 5: Artifacts Delivery)
+## 阶段三：底层撮合机制的生产级悲观审查 (Phase 3: Pessimistic Matching Audit)
 
-- **标准化交易日志**: `results/unified/trades/*.json` 与 `results/portfolio/trades/*.json`
-- **指标全量数据表**: `all_backtest_summary.csv` 与 `portfolio_summary.csv`
-- **分析报告**: `FINAL_BACKTEST_REPORT.md` 与 `HIGH_FREQUENCY_SMC_QLIB_REPORT.md`
-- **代码仓库远程同步**: 自动推送到指定的 GitHub 私有/公有代码资产库。
+消灭回测中一切脱离实盘的物理假设：
+1. **严格盘口穿透 Maker 撮合 (Strict Penetration Fill)**:
+   - 限价单买单必须满足 `Low < LimitPrice - 0.05 * ATR`，卖单必须满足 `High > LimitPrice + 0.05 * ATR`，彻底消除时间优先队列下的排队幻觉与逆向选择。
+2. **同 Bar 极端悲观裁决 (Pessimistic Intra-Bar Conflict)**:
+   - 单根 K 线同时满足止盈与止损时，**强制裁决为先止损出局**，杜绝未经验证的保本红利。
+3. **动态恐慌滑点 (Dynamic Panic Slippage)**:
+   - 止损市价单滑点与 K 线实体动态放大，在大实体暴跌 Bar 上动态放大滑点至 `0.15% ~ 0.35%`。
+
+---
+
+## 阶段四：防过拟合审查与真实性核验 (Phase 4: Anti-Overfitting Verification)
+
+1. **严禁根据交易记录倒推规则**:
+   - 交易记录仅用于审查手续费损耗、撮合真实性与资金守恒 Bug，绝不用于挑品种或加事后过滤。
+2. **事前理论约束的单调性检验**:
+   - 若引入 Credal Transformer / 证据理论，必须在全量标的上盲测其单调性：随着认识不确定度 $u$ 增加，交易表现必须单调恶化，方证明约束具备物理意义而非随机拟合。
+3. **封存独立盲测集**:
+   - 留存从未见过的自然年份（20% 样本外）一次性检验，跑崩即证伪，绝不对历史反复修补。
+
+---
+
+## 阶段五：GitHub 自动化沉淀与版本控制 (Phase 5: Git Artifact Delivery)
+
+每次迭代必须固化以下资产并同步远程 GitHub 仓库：
+- `src/`: 策略因果算子、Qlib 因子流水线、生产级悲观执行引擎代码；
+- `tests/`: 白帽安全性测试、资金守恒测试、因果零前瞻测试；
+- `results/`: 独立资金与共享资金的 160 组逐笔 JSON 日志与汇总 CSV 底稿；
+- `docs/research/`: 包含最终收敛状态（【无研究价值】或【具备稳定正期望】）的定性研报。
