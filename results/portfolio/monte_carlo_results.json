@@ -1,0 +1,17 @@
+{
+  "n_simulations": 2000,
+  "sample_trades_per_path": 200,
+  "initial_capital": 1000.0,
+  "mean_terminal_wealth": 851.6056511250326,
+  "median_terminal_wealth": 849.2829022486337,
+  "mean_return_pct": -14.839434887496731,
+  "median_return_pct": -15.071709775136629,
+  "percentile_5_return_pct": -26.319994026588905,
+  "percentile_95_return_pct": -2.554665433031162,
+  "mean_max_drawdown_pct": 17.60008362630409,
+  "percentile_95_max_drawdown_pct": 27.34903069306203,
+  "percentile_99_max_drawdown_pct": 32.060478816352365,
+  "probability_of_ruin_pct": 0.0,
+  "var_95_pct": 26.319994026588905,
+  "cvar_95_pct": 29.049490532262816
+}
