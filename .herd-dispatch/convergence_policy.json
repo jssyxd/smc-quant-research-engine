@@ -1,0 +1,16 @@
+{
+  "captain": "omp",
+  "protocol": "Dual-Convergence Protocol v4.0",
+  "enforce_convergence": true,
+  "validator_script": "scripts/validate_agent_convergence.py",
+  "convergence_hook": ".herd-dispatch/hooks/verify_convergence.sh",
+  "allowed_conclusions": [
+    "【终局结论 1：该策略没有研究的价值，在几乎任何情况下都不具备大幅盈利的可能性、不具备作为量化交易公司的策略之一】",
+    "【终局结论 2：该策略在严格避免过拟合的情况下能够合理优化提升 PnL】"
+  ],
+  "prohibited_behaviors": [
+    "infinite_parameter_tuning",
+    "post_hoc_cherry_picking",
+    "ambiguous_inconclusive_deliverables"
+  ]
+}
