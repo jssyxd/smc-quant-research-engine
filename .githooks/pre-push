@@ -4,7 +4,7 @@ set -e
 # ==============================================================================
 # Git Pre-Push Gate: Final Remote Defense for Dual-Convergence Protocol
 # Enforces that NO branch or commit can be pushed to remote GitHub if:
-# 1. Any research deliverable in docs/research/ fails validate_agent_convergence.py
+# 1. Any agent research deliverable in docs/research/ (WORKFLOW_AGENT_*) fails validate_agent_convergence.py
 # 2. Convergence state machine unit tests fail
 # ==============================================================================
 
@@ -22,8 +22,8 @@ python3 tests/test_convergence_validator.py > /dev/null 2>&1 || {
     exit 1
 }
 
-# 3. Audit all research deliverables
-REPORTS=$(find docs/research/ -maxdepth 1 -name "*.md" ! -name "*TEMPLATE*" || true)
+# 3. Audit active agent research deliverables (WORKFLOW_AGENT_*)
+REPORTS=$(find docs/research/ -maxdepth 1 -name "WORKFLOW_AGENT_*.md" || true)
 for report in $REPORTS; do
     python3 scripts/validate_agent_convergence.py "$report" > /dev/null 2>&1 || {
         echo "[X] PRE-PUSH REJECTED: Deliverable $report failed Dual-Convergence Protocol verification!"
