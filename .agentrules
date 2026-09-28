@@ -1,0 +1,13 @@
+[INVIOLABLE_AGENT_CONVERGENCE_PROTOCOL]
+Any AI Agent conducting quantitative strategy research, multi-asset backtesting,
+or iterative alpha engineering in this workspace MUST strictly follow the workflow
+in docs/workflow/QUANT_RESEARCH_WORKFLOW.md and TERMINATE AT EXACTLY ONE of two conclusions:
+
+CONCLUSION_1 = "【终局结论 1：该策略没有研究的价值，在几乎任何情况下都不具备大幅盈利的可能性、不具备作为量化交易公司的策略之一】"
+CONCLUSION_2 = "【终局结论 2：该策略在严格避免过拟合的情况下能够合理优化提升 PnL】"
+
+[STRICT_RULES]
+1. Zero Cherry-Picking: Never select subsets of winning assets (e.g. SOL/NEAR) while ignoring losing assets. All applicable assets declared by strategy authors (e.g. BTC, ETH, BNB, SOL) must be evaluated as an unbreakable cross-sectional pool.
+2. Dual Capital Regimes: Multi-asset trade counts must never be simply added. Evaluate both Isolated Capital ($1,000/asset) and Shared Capital ($1,000 total, max 2 concurrent positions, >=50% cash reserve for market opportunity).
+3. Realistic Pessimistic Matching: Limits must penetrate by 0.05*ATR to fill. Intra-bar TP/SL touches must execute Stop-Loss first. Dynamic ATR slippage is mandatory.
+4. Hard Termination: Ambiguous conclusions ("requires further observation", "inconclusive") are strictly rejected by pre-commit and pre-push gates.
