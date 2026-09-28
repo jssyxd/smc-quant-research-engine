@@ -1,0 +1,29 @@
+#!/bin/bash
+set -e
+
+# ==============================================================================
+# Agent Workflow Automated Iteration Gate (Git Pre-Commit Hook)
+# Strictly prevents committing any research deliverable that fails to converge
+# definitively to either Conclusion 1 or Conclusion 2.
+# ==============================================================================
+
+echo ">>> [WORKFLOW CI-GATE] Verifying Agent Dual-Convergence Protocol..."
+
+REPORTS=$(git diff --cached --name-only | grep -E '^docs/research/.*\.md$' || true)
+
+if [ -z "$REPORTS" ]; then
+    echo ">>> [WORKFLOW CI-GATE] No research reports modified. Gate clear."
+    exit 0
+fi
+
+for report in $REPORTS; do
+    # Skip template files
+    if [[ "$report" == *"TEMPLATE"* ]]; then
+        continue
+    fi
+    echo ">>> [WORKFLOW CI-GATE] Auditing deliverable: $report"
+    python3 scripts/validate_agent_convergence.py "$report"
+done
+
+echo ">>> [WORKFLOW CI-GATE] All research deliverables successfully verified under Dual-Convergence Protocol!"
+exit 0
