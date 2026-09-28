@@ -1,4 +1,4 @@
-# 🔬 量化 Agent 多轮迭代终局研究报告: SMC_Optimized_V1_V3
+# 🔬 量化 Agent 多轮迭代终局研究报告: SMC_Sovereign_Crypto_Suite
 
 【终局结论 1：该策略没有研究的价值，在几乎任何情况下都不具备大幅盈利的可能性、不具备作为量化交易公司的策略之一】
 **收敛状态标签**: `[STATUS: ABANDONED]`
