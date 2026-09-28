@@ -1,24 +1,26 @@
-# Swarm Decisions Log: Credal Uncertainty, Anti-Hallucination & Anti-Overfitting for SMC Quantitative Engine
+# Swarm Decisions Log: Round 2 SMC High-Frequency Alpha Optimization & White-Hat Auditing
 
-## 2026-09-28: Inception & Architectural Synthesis
+## 2026-09-28: Round 2 Quantitative Architectural Decisions
 
-### Background
-We investigated:
-1. **NeurIPS 2025 Paper (arXiv:2510.12137)**: *Credal Transformer: A Principled Approach for Quantifying and Mitigating Hallucinations in Large Language Models* (Authors: Shihao Ji, Zihui Song, Jiajie Huang).
-   - Core finding: Standard Softmax forces "Artificial Certainty" by collapsing ambiguous attention scores into a single point distribution.
-   - Credal Solution: Replaces Softmax with Evidential Theory (Dirichlet distribution over probability simplex). When evidence is insufficient/ambiguous, the Credal set expands, enabling principled **abstention** (refusing to make a false assertion).
-2. **AlphaGPT Repository (imbue-bit/AlphaGPT)**:
-   - A reinforcement learning framework generating symbolic formula tokens (RPN Stack VM) for crypto meme trading.
-   - Key vulnerability: As highlighted in Duan Jingyi's post, the backtest evaluation loop (`MemeBacktest`) used static in-sample cumulative returns minus penalization (`cum_ret - big_drawdowns * 2.0`), lacking Out-of-Sample verification, permutation testing, cross-asset audits, or uncertainty quantification. This led to severe **Alpha Hallucination** (overfitting to historical noise, high in-sample score but catastrophic real-world failure).
+### Context & Diagnosis of Round 1 Post-Audit Baseline
+After eliminating Lookahead Bias and the double-counting PnL bug in Round 1:
+- The raw SMC strategies suffered negative returns on 15m (-12.25% OOS) primarily due to **fee & slippage friction death zone**:
+  - Paying 0.05% Taker + 0.05% Slippage on entry and exit amounted to 20 bps round-trip friction.
+  - On 15m, this accumulated to \$141.45 friction cost per year on a \$1,000 account (14.1% of capital).
+- To achieve solid positive PnL across both In-Sample (IS) and Out-of-Sample (OOS) while operating at high frequency (1~60 trades/day), we must make fundamental quantitative upgrades:
 
-### Decisions for our SMC Quantitative Project:
-1. **Decision D1: Credal Abstention in SMC Confluence Scoring**:
-   - Instead of forcing an entry when Confluence Score $\ge 70$, compute Dirichlet Evidential Uncertainty across factors.
-   - If Epistemic Uncertainty (ambiguity between factors or regime conflict) exceeds threshold $u_{max}$, the agent must **abstain** (`Signal = NEUTRAL`), directly mitigating false-positive trade hallucinations.
-2. **Decision D2: Strict Deflationary Reward & Overfitting Metric**:
-   - Deflated Sharpe Ratio (DSR) and Probability of Backtest Overfitting (PBO) will replace naive PnL metrics.
-   - Any Alpha generation loop must evaluate on 80% IS and grade survival on 20% OOS.
-3. **Decision D3: Disjoint Leaf Decomposition for Herdr Swarm**:
-   - **Leaf A (`leaf-credal-alpha`)**: Credal evidential uncertainty engine and abstention filter for SMC signals. Owned files: `src/credal_engine.py`, `tests/test_credal.py`.
-   - **Leaf B (`leaf-anti-overfit`)**: Statistical anti-overfitting suite (DSR, PBO, Combinatorial Purged Cross-Validation CPCV). Owned files: `src/anti_overfit_suite.py`, `tests/test_overfit.py`.
-   - **Leaf C (`leaf-audit-report`)**: Cross-asset benchmark audit and deep-dive technical report synthesizing the Credal Transformer, AlphaGPT, and SMC integration. Owned files: `docs/research/CREDAL_ALPHAGPT_SMC_AUDIT.md`.
+### Decisions:
+1. **Decision D4: Maker Limit Order Entry at Order Block Retracement**:
+   - Instead of chasing market breakout entries (Taker 0.05% + 0.05% slippage), the strategy places Limit Orders at the 50% equilibrium of the validated Order Block / FVG.
+   - Entry fee drops from 0.05% + 0.05% = 0.10% to **0.02% Maker fee with 0.00% slippage**.
+   - This single change improves edge by +8 to +10 bps per trade.
+2. **Decision D5: Qlib Alpha Momentum & Order Flow Imbalance (OFIP)**:
+   - Confluence score incorporates Qlib-style micro-structure factors:
+     - Volume Impulses ($V / \text{SMA}(V, 20) \ge 1.5$)
+     - Micro price displacement ratio
+     - Multi-timeframe trend alignment (15m execution conditioned on 1h EMA50)
+   - Only enters when Confluence Score $\ge 70$ AND Credal Dirichlet Uncertainty $u \le 0.35$.
+3. **Decision D6: Disjoint Swarm Leaf Decomposition**:
+   - **Leaf A (`leaf-qlib-alpha`)**: `src/qlib_smc_alpha.py`, `tests/test_qlib_alpha.py` (Qlib feature extraction & signal generation).
+   - **Leaf B (`leaf-round2-engine`)**: `src/smc_round2_engine.py`, `tests/test_round2_engine.py` (Limit order matching, compounding, OOS warmup, and metric pipeline).
+   - **Leaf C (`leaf-whitehat-auditor`)**: `tests/test_whitehat_security.py` (White-hat penetration testing, mathematical invariants, lookahead proofs, balance conservation).

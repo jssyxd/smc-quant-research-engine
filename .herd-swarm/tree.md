@@ -1,12 +1,12 @@
-# Swarm Task Tree
+# Swarm Task Tree: Round 2 SMC High-Frequency Alpha Optimization & White-Hat Auditing
 
-- **Goal**: Implement Credal Uncertainty quantification (anti-hallucination) & Statistical Anti-Overfitting suite inspired by NeurIPS 2025 Credal Transformer & AlphaGPT retrospective, benchmarked against SMC multi-asset engine.
+- **Goal**: Boost IS/OOS PnL while maintaining 1~60 trades/day via Qlib micro-structure factors, Maker limit entries, compounding, 2021-2025 walk-forward backtesting, 2000-path Monte Carlo stress tests, and automated white-hat auditing.
 - **Captain**: Planner, reviewer, and merge queue arbiter.
 
 ## Leaves
 
 | Leaf ID | Kind | Role | Status | Ownership | Deliverable |
 | :--- | :--- | :--- | :---: | :--- | :--- |
-| **leaf-credal-alpha** | `omp` | implementer | **merged** | `src/credal_engine.py`, `tests/test_credal.py` | Credal Evidential Dirichlet Uncertainty & Abstention Filter for SMC (Passes 8 unit tests) |
-| **leaf-anti-overfit** | `omp` | implementer | **merged** | `src/anti_overfit_suite.py`, `tests/test_overfit.py` | Deflated Sharpe Ratio (DSR), Probability of Backtest Overfitting (PBO), and Haircut Sharpe (Passes 6 unit tests) |
-| **leaf-audit-report** | `omp` | reporter | **merged** | `docs/research/CREDAL_ALPHAGPT_SMC_AUDIT.md` | 40KB in-depth technical report & post-mortem on NeurIPS 2025 Credal Transformer & AlphaGPT |
+| **leaf-qlib-alpha** | `omp` | implementer | planned | `src/qlib_smc_alpha.py`, `tests/test_qlib_alpha.py` | Qlib Micro-Structure Alpha Pipeline (OFIP, Volume Delta, OB 50% Entry Zone) |
+| **leaf-round2-engine** | `omp` | implementer | planned | `src/smc_round2_engine.py`, `tests/test_round2_engine.py` | Execution Engine with Maker Limit Entries, Compounding, Credal Abstention, and Walk-Forward Pipeline |
+| **leaf-whitehat-auditor** | `omp` | reviewer | planned | `tests/test_whitehat_security.py` | Automated White-Hat Security, Invariant Verification, and Lookahead Zero-Proof |

@@ -79,6 +79,7 @@ class CredalDecision:
 DEFAULT_BULL_FACTORS: Dict[str, float] = {
     "htf_bull_bias": 2.0,
     "bull_ob": 2.0,
+    "bull_fvg": 1.5,
     "ssl_swept": 1.5,
     "in_discount": 1.0,
 }
@@ -86,21 +87,25 @@ DEFAULT_BULL_FACTORS: Dict[str, float] = {
 DEFAULT_BEAR_FACTORS: Dict[str, float] = {
     "htf_bear_bias": 2.0,
     "bear_ob": 2.0,
+    "bear_fvg": 1.5,
     "bsl_swept": 1.5,
     "in_premium": 1.0,
 }
-
 # Aliases to accommodate varied naming conventions across quant repositories
 INDICATOR_ALIASES: Dict[str, str] = {
     # Bullish indicators
     "htfbullbias": "htf_bull_bias",
-    "htf_bull_bias": "htf_bull_bias",
     "htf_bull": "htf_bull_bias",
     "htf_trend_bull": "htf_bull_bias",
+    "trend_up": "htf_bull_bias",
+    "trendup": "htf_bull_bias",
     "bullobsignal": "bull_ob",
     "bull_ob_signal": "bull_ob",
     "bull_ob": "bull_ob",
     "bullish_ob": "bull_ob",
+    "bullishob": "bull_ob",
+    "bull_fvg": "bull_fvg",
+    "bullfvg": "bull_fvg",
     "bullishob": "bull_ob",
     "sslswept": "ssl_swept",
     "ssl_swept": "ssl_swept",
@@ -115,11 +120,15 @@ INDICATOR_ALIASES: Dict[str, str] = {
     "htf_bear_bias": "htf_bear_bias",
     "htf_bear": "htf_bear_bias",
     "htf_trend_bear": "htf_bear_bias",
+    "trend_down": "htf_bear_bias",
+    "trenddown": "htf_bear_bias",
     "bearobsignal": "bear_ob",
     "bear_ob_signal": "bear_ob",
     "bear_ob": "bear_ob",
     "bearish_ob": "bear_ob",
     "bearishob": "bear_ob",
+    "bear_fvg": "bear_fvg",
+    "bearfvg": "bear_fvg",
     "bslswept": "bsl_swept",
     "bsl_swept": "bsl_swept",
     "bsl_sweep": "bsl_swept",
