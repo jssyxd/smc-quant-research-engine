@@ -37,3 +37,6 @@ results/*/trades/
 results/unified/trades/
 results/portfolio/trades/
 results/portfolio/all_trades_corpus.json
+.agents/skills/cua-driver
+.agents/skills/gui-automation
+.agents/skills/jev-use

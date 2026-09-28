@@ -1,7 +1,7 @@
 import sys, os, gc, glob, math, json
 import pandas as pd
 import numpy as np
-from backtest_core import load_symbol_timeframe_data, SMCExecutionEngine
+from backtest_core import load_symbol_timeframe_data, SMCExecutionEngine, get_strategy_config_and_funcs
 
 SYMBOLS = ['BTC', 'ETH', 'SOL', 'BNB', 'NEAR']
 
@@ -12,26 +12,35 @@ def run_portfolio_compound():
     summary = []
     all_trades_corpus = []
 
-    # Portfolio pool model: Single $1,000 account trading the multi-asset crypto portfolio
-    # Each trade risks 0.5% ~ 1.0% of current equity (total portfolio risk controlled)
     initial_cash = 1000.0
+
+    # Load and pre-compute warmed-up continuous indicators for all symbols
+    warmed_data = {}
+    config, compute_ind, get_sig = get_strategy_config_and_funcs('v2_volatility_regime')
+    for sym in SYMBOLS:
+        try:
+            print(f"Loading and pre-warming indicators for {sym} 15m...")
+            df = load_symbol_timeframe_data(sym, '15m')
+            data = compute_ind(df, config)
+            data = get_sig(data, config)
+            warmed_data[sym] = data
+            del df
+            gc.collect()
+        except Exception as e:
+            print(f"Error loading {sym}: {e}")
 
     for year in range(2021, 2026):
         dfs_is = {}
         dfs_oos = {}
 
-        for sym in SYMBOLS:
-            try:
-                df = load_symbol_timeframe_data(sym, '15m')
-                df_y = df[df.index.year == year]
-                if len(df_y) >= 100:
-                    split_idx = int(len(df_y) * 0.8)
-                    dfs_is[sym] = df_y.iloc[:split_idx]
-                    dfs_oos[sym] = df_y.iloc[split_idx:]
-            except Exception as e:
-                pass
+        for sym in warmed_data:
+            data = warmed_data[sym]
+            data_y = data[data.index.year == year]
+            if len(data_y) >= 100:
+                split_idx = int(len(data_y) * 0.8)
+                dfs_is[sym] = data_y.iloc[:split_idx]
+                dfs_oos[sym] = data_y.iloc[split_idx:]
 
-        # Sub-account sizing: each asset has initial $200 allocated out of $1,000 total pool
         sub_initial = initial_cash / len(dfs_is)
 
         engine = SMCExecutionEngine(
@@ -80,6 +89,12 @@ def run_portfolio_compound():
         year_is_trades.sort(key=lambda x: x['entry_time'])
         year_oos_trades.sort(key=lambda x: x['entry_time'])
 
+        # Save trade logs
+        with open(f"results/portfolio/trades/portfolio_15m_{year}_IS_trades.json", "w") as fp:
+            json.dump(year_is_trades, fp, indent=2)
+        with open(f"results/portfolio/trades/portfolio_15m_{year}_OOS_trades.json", "w") as fp:
+            json.dump(year_oos_trades, fp, indent=2)
+
         is_days = 365.25 * 0.8
         oos_days = 365.25 * 0.2
 
@@ -113,12 +128,12 @@ def run_portfolio_compound():
             "oos_slippage": year_oos_slip
         }
         summary.append(rec)
-        print(f"[{year}] IS: {len(year_is_trades)} ({is_daily_freq:.2f}/d, +{is_ret_pct:.1f}%) | OOS: {len(year_oos_trades)} ({oos_daily_freq:.2f}/d, +{oos_ret_pct:.1f}%) | Fees: ${year_oos_fees:.1f}")
+        print(f"[{year}] IS: {len(year_is_trades)} ({is_daily_freq:.2f}/d, {is_ret_pct:+.1f}%) | OOS: {len(year_oos_trades)} ({oos_daily_freq:.2f}/d, {oos_ret_pct:+.1f}%) | Fees: ${year_oos_fees:.1f}")
 
     df_summary = pd.DataFrame(summary)
     df_summary.to_csv("results/portfolio/portfolio_summary.csv", index=False)
     print("\nPortfolio Summary Saved!")
-    print(df_summary[['year', 'is_daily_freq', 'oos_daily_freq', 'is_return_pct', 'oos_return_pct', 'oos_win_rate']])
+    print(df_summary[['year', 'is_daily_freq', 'oos_daily_freq', 'is_return_pct', 'oos_return_pct', 'oos_win_rate']].to_string(index=False))
 
     with open("results/portfolio/all_trades_corpus.json", "w") as fp:
         json.dump(all_trades_corpus, fp)

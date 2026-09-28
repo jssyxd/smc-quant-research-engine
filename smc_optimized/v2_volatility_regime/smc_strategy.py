@@ -271,17 +271,20 @@ class SMCStrategy:
         logger.debug(f"开仓: {direction.name} @ {close:.2f}, SL={sl:.2f}, TP1={tp1:.2f}, TP2={tp2:.2f}")
 
     def _partial_close(self, timestamp: pd.Timestamp, price: float, reason: str):
+        close_size = self.position_size * (self.config.tp1_qty_pct / 100.0)
         if self.position == TradeDirection.LONG:
-            pnl = self.position_size * (price - self.entry_price)
+            pnl = close_size * (price - self.entry_price)
         else:
-            pnl = self.position_size * (self.entry_price - price)
+            pnl = close_size * (self.entry_price - price)
 
-        cost = self.position_size * price * self.commission
+        cost = close_size * price * self.commission
         pnl -= cost
         self.cash += pnl
-
+        self.position_size -= close_size
         self.tp1_hit = True
-        # TP1 后也移到带缓冲的保本
+        self.tp1_pnl = pnl
+
+        # TP1 后移到带缓冲的保本
         atr = self.data.loc[timestamp, 'ATR'] if timestamp in self.data.index else 0
         buffer = self.config.early_be_buffer_atr * atr if atr else 0
         if self.position == TradeDirection.LONG:
@@ -290,30 +293,32 @@ class SMCStrategy:
             self.planned_sl = self.entry_price - buffer
         self.early_be_triggered = True
 
-        logger.debug(f"TP1 部分平仓: {reason} @ {price:.2f}, PnL={pnl:.2f}")
+        logger.debug(f"TP1 部分平仓: {reason} @ {price:.2f}, PnL={pnl:.2f}, 剩余仓位={self.position_size:.4f}")
 
     def _close_trade(self, timestamp: pd.Timestamp, price: float, reason: str):
         if self.position == TradeDirection.FLAT:
             return
 
+        rem_size = self.position_size
         if self.position == TradeDirection.LONG:
-            pnl = self.position_size * (price - self.entry_price)
+            pnl = rem_size * (price - self.entry_price)
         else:
-            pnl = self.position_size * (self.entry_price - price)
+            pnl = rem_size * (self.entry_price - price)
 
-        cost = self.position_size * price * self.commission
+        cost = rem_size * price * self.commission
         pnl -= cost
         self.cash += pnl
 
+        total_pnl = (getattr(self, 'tp1_pnl', 0.0) if self.tp1_hit else 0.0) + pnl
         if self.current_trade:
             self.current_trade.exit_time = timestamp
             self.current_trade.exit_price = price
-            self.current_trade.pnl = pnl
-            self.current_trade.pnl_pct = pnl / (self.position_size * self.entry_price) * 100
+            self.current_trade.pnl = total_pnl
+            self.current_trade.pnl_pct = total_pnl / (self.current_trade.size * self.entry_price) * 100
             self.current_trade.exit_reason = reason
             self.trades.append(self.current_trade)
 
-        logger.debug(f"平仓: {reason} @ {price:.2f}, PnL={pnl:.2f}")
+        logger.debug(f"平仓: {reason} @ {price:.2f}, 总PnL={total_pnl:.2f}")
 
         self.position = TradeDirection.FLAT
         self.position_size = 0.0
@@ -321,7 +326,8 @@ class SMCStrategy:
         self.entry_time = None
         self.current_trade = None
         self.early_be_triggered = False
-
+        self.tp1_hit = False
+        self.tp1_pnl = 0.0
     def _generate_result(self) -> BacktestResult:
         if not self.trades:
             return BacktestResult(

@@ -111,31 +111,20 @@ def compute_smc_indicators(df: pd.DataFrame, config: Optional[SMCConfig] = None)
     df['ATR100'] = atr100
     df['ATR_Ratio'] = atr / np.maximum(atr100, 1e-9)
 
-    # 2. 枢轴
+    # 2. 枢轴 (因果严格检测：在时间 t 仅确认 t - swing_len 处的极值，绝无未来函数)
     swing_len = config.swing_len
-    is_high = np.zeros(n, dtype=bool)
-    is_low = np.zeros(n, dtype=bool)
-    for i in range(swing_len, n - swing_len):
-        if high[i] == np.max(high[i - swing_len:i + swing_len + 1]):
-            is_high[i] = True
-        if low[i] == np.min(low[i - swing_len:i + swing_len + 1]):
-            is_low[i] = True
-
     hh = np.full(n, np.nan)
     ll = np.full(n, np.nan)
-    last_hh_idx = 0
-    last_ll_idx = 0
-    for i in range(n):
-        if is_high[i]:
-            hh[i] = high[i]
-            last_hh_idx = i
-        else:
-            hh[i] = hh[last_hh_idx] if last_hh_idx > 0 else np.nan
-        if is_low[i]:
-            ll[i] = low[i]
-            last_ll_idx = i
-        else:
-            ll[i] = ll[last_ll_idx] if last_ll_idx > 0 else np.nan
+    curr_hh = np.nan
+    curr_ll = np.nan
+    for t in range(2 * swing_len, n):
+        p = t - swing_len
+        if high[p] == np.max(high[p - swing_len : t + 1]):
+            curr_hh = high[p]
+        if low[p] == np.min(low[p - swing_len : t + 1]):
+            curr_ll = low[p]
+        hh[t] = curr_hh
+        ll[t] = curr_ll
     df['HH'] = hh
     df['LL'] = ll
 
