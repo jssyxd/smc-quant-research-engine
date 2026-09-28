@@ -1,71 +1,82 @@
-# 🔬 SMC Quant Research Engine & Multi-Agent Backtest Swarm
+# Quant Research & Backtest AI Swarm: Industrial Convergence Workflow
 
-生产级智能体协作量化研发、跨资产高频/中频 SMC 策略评测、双引擎撮合审计与反过拟合工业级引擎。
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![NautilusTrader: Compatible](https://img.shields.io/badge/NautilusTrader-1.227%2B-green.svg)](https://github.com/nautechsystems/nautilus_trader)
-[![QuantCell: Supported](https://img.shields.io/badge/QuantCell-Integrated-orange.svg)](https://github.com/pengwow/QuantCell)
+This repository serves as the **Supreme Constitution & Execution Framework** for quantitative AI agent swarms (Architect, Quant Developer, White-Hat Security Auditor, Risk Reviewer) conducting automated alpha hypothesis generation, causal feature engineering, realistic matching simulation, and anti-overfitting audits.
 
 ---
 
-## 🎯 智能体核心工作流收敛协议 (Dual Convergence Protocol)
+## 🎯 Mandatory Agent Convergence Protocol (智能体多轮迭代双向强制收敛协议)
 
-本项目严格遵循 [`docs/workflow/QUANT_RESEARCH_WORKFLOW.md`](docs/workflow/QUANT_RESEARCH_WORKFLOW.md) 工业级量化工作流规范。所有多 Agent 蜂群协作的策略优化与迭代，**严禁无限期调参，严禁事后挑选优势品种（Cherry-Picking），最终必须且只能收敛至以下两种确定性结论之一**：
+When any AI Agent executes quantitative research, backtesting, or multi-round iterative parameter optimization within this repository, **infinite parameter fine-tuning (P-Hacking), post-hoc asset cherry-picking, and ambiguous conclusions (e.g., "inconclusive, requires further observation") are strictly prohibited**.
 
-1. **【终局结论 1：该策略没有研究的价值】**  
-   *在几乎任何情况下都不具备大幅盈利的可能性、不具备作为量化交易公司的策略之一。*  
-   - 扣除真实 Maker/Taker 手续费与滑点后期望为负；
-   - 依赖“挂单触碰即成交”排队幻觉或“同 Bar 优先止盈”虚假红利；
-   - 在多标的共享资金池（限 2 仓并发 + 留存 50% 现金）下同向暴跌共振；
-   - 样本外盲测崩溃。
-2. **【终局结论 2：该策略在严格避免过拟合的情况下能够合理优化提升 PnL】**  
-   *全量适用标的无偏检验通过，事前理论约束有效减亏增益，具备作为量化公司实盘配置子策略的价值。*  
-   - 零事后挑选，BTC/ETH/BNB/SOL 主权加密池全量检验通过；
-   - 事前（Ex-Ante）Credal 狄利克雷认知不确定性约束在盲测中呈现严格单调的减亏/增益效果；
-   - 扛住“严格穿透成交 + 同 Bar 优先止损”的极度悲观撮合考验；
-   - 共享资金池实序模拟下具备稳健复利能力。
+**All agent iterations MUST strictly terminate at one of the following two mutually exclusive convergence conclusions:**
 
----
+```
+========================================================================================
+                      【智能体多轮迭代双向终局收敛状态】
+----------------------------------------------------------------------------------------
+[终局 1] 该策略没有研究的价值，在几乎任何情况下都不具备大幅盈利的可能性、
+         不具备作为量化交易公司的策略之一。
+         --> Action: 立即终止后续调参，停止消耗算力，出具终极证伪审计报告，
+                     封存废弃，坚决拒绝进入生产实盘环境。
 
-## 📌 核心标的与资金分配模型审计
-
-针对策略作者声明适用的四大主流加密资产（**BTC、ETH、BNB、SOL**），进行了 2021~2025 年自然年滚动窗口（80% IS / 20% OOS）下的独立资金池 vs 共享资金池深度对照：
-
-### 1. 策略每次交易动用多少比例账户资金？
-源码（`smc_strategy.py:122-131`）并非固定百分比买入，而是按**固定风险比例（2.0%）结合止损点差反算名义资金**：
-$$\text{动用资金比例} = \frac{2.0\%}{\text{止损幅度 (\%) }}$$
-- **止损 1% 时**：动用 200% 资金（开 2 倍杠杆）；
-- **止损 2% 时**：刚好动用 100% 账户资金；
-- **止损 4% 时**：动用 50% 资金（留存 50% 现金）；
-- **止损大于 5% 时**：代码强制弃单，设立 4.0x 最大名义杠杆安全红线。
-
-### 2. 双资金模型回测对比 (1h 周期 5 年自然年盲测 OOS)
-- **版本 A：不共用资金（每个标的独立 $1,000）**
-  - **SOL**: +0.70%/年 (胜率 63.6%, 回撤 3.17%)
-  - **BTC**: -0.97%/年 (胜率 37.2%, 回撤 3.62%)
-  - **ETH**: -1.14%/年 (胜率 46.8%, 回撤 4.98%)
-  - **BNB**: -1.82%/年 (胜率 39.6%, 回撤 5.41%)
-- **版本 B：共用资金池（$1,000 总本金，限最多 2 仓并发，保留 50% 资金等待机会）**
-  - 年均实际执行：**27.2 笔/年**；
-  - 因满仓错失机会：**仅 0.6 笔/年（错失率 2.2%）**，说明由于 SMC 信号天然稀疏，绝大多数时间资金充沛；
-  - 样本外年均收益：**-2.71%**，平均胜率：**45.3%**，平均最大回撤：**8.8%**；
-  - 最大风险：四大币种高度正相关，2024 年下半年双仓同时被打穿止损造成单年回撤 12.51%。
+[终局 2] 该策略在严格避免过拟合的情况下能够合理优化提升 PnL。
+         --> Action: 100% 通过全量标的无偏检验、事前理论约束与极端悲观撮合检验，
+                     交付生产级代码与实盘风控建议书，列为量化公司的配置子策略。
+========================================================================================
+```
 
 ---
 
-## 🛠️ 核心架构与工程交付物
+## 🔄 Five-Phase Iterative Execution Cycle (五阶段标准研发闭环)
 
-1. **生产级极度悲观撮合执行引擎** (`src/smc_pessimistic_engine.py`):
-   - **严格盘口穿透机制 (`Strict Penetration Fill`)**: 挂单成交必须满足价格穿透 `LimitPrice ± 0.05 * ATR`，彻底消除时间优先队列下的排队幻觉与逆向选择；
-   - **同 Bar 极端悲观裁决 (`Pessimistic Intra-Bar Conflict`)**: 单根 K 线同时满足止盈与止损时，强制裁决为先扫损出局，杜绝假保本红利；
-   - **动态恐慌滑点 (`Dynamic Panic Slippage`)**: 止损单滑点与 K 线实体波幅联动放大。
-2. **多资产时序事件队列执行器** (`crypto_capital_models_runner.py`):
-   - 支持独立资金池与共享资金池并发控制（最多 2 仓并发 + 留存 50% 机会资金）。
-3. **白帽安全性与数学不变性测试** (`tests/test_whitehat_security.py`):
-   - 100% 通过未来时序打乱不变性与复式记账平衡守恒测试。
-4. **研报体系**:
-   - 工作流最高宪法: [`docs/workflow/QUANT_RESEARCH_WORKFLOW.md`](docs/workflow/QUANT_RESEARCH_WORKFLOW.md)
-   - 资金分配模型深度审计: [`docs/research/CRYPTO_CAPITAL_ALLOCATION_AUDIT.md`](docs/research/CRYPTO_CAPITAL_ALLOCATION_AUDIT.md)
-   - 悲观撮合全量对比研报: [`docs/research/PESSIMISTIC_MATCHING_REPORT.md`](docs/research/PESSIMISTIC_MATCHING_REPORT.md)
-   - 反过拟合形式化审计底稿: [`docs/research/ANTI_OVERFITTING_CREDAL_AUDIT.md`](docs/research/ANTI_OVERFITTING_CREDAL_AUDIT.md)
+```mermaid
+graph TD
+    Start[Phase 1: 确定作者适用标的池 & 反解资金头寸模型] --> Phase2[Phase 2: 独立资金池 vs 共享资金队列回测]
+    Phase2 --> Phase3[Phase 3: 底层悲观撮合审查: 穿透挂单 + 同Bar先止损]
+    Phase3 --> Audit1{第一轮迭代: 是否严重依赖虚假红利或无法盈利?}
+    
+    Audit1 -->|摩擦吞噬 / 严重失真| Concl1[【终局 1: 该策略没有研究的价值】]
+    Audit1 -->|具备理论突围空间| Phase4[Phase 4: 引入事前理论约束: Credal 认知不确定性自适应拒单]
+    
+    Phase4 --> Phase5[Phase 5: 全量标的无偏盲测检验 & 白帽数学不变性全通]
+    Phase5 --> Audit2{第二轮迭代: 理论约束是否真实单调有效?}
+    
+    Audit2 -->|换皮过拟合 / 盲测衰减| Concl1
+    Audit2 -->|全通检验 / 稳健提升| Concl2[【终局 2: 严格避免过拟合下能够合理优化提升PNL】]
+```
+
+### 阶段一：适用标的界定与资金头寸模型反解 (Phase 1)
+1. **标的范围固定化**: 严格遵循策略作者声明的适用资产（加密货币核心池：**BTC, ETH, BNB, SOL**），严禁事后挑币（Zero Cherry-Picking）。
+2. **每次交易动用资金比例精确反解**:
+   $$\text{动用名义资金比例} = \frac{\text{单笔风险比例 (2.0\%)}}{\text{止损点差幅度 (\%)}} = \frac{2.0\%}{|\text{Entry} - \text{SL}| / \text{Entry}}$$
+   - 止损 1% 时动用 200% 资金（开 2 倍杠杆）；止损 2% 时占满 100% 资金；止损 4% 时动用 50% 资金（留存 50% 现金）；设立 **4.0x 最大名义杠杆安全红线**。
+
+### 阶段二：双资金制度真实时序队列检验 (Phase 2)
+严禁将多标的交易次数简单相加！必须使用时间戳事件队列（Event-Driven Queue）模拟资金流动：
+- **版本 A（独立资金池）**: 各标的独立 $1,000 USD，评估纯粹 Alpha。
+- **版本 B（共享资金池与机会留存）**: 共享单一 $1,000 USD，**限制最多 2 仓并发，永远保留 $\ge 50\%$ 现金等待其他标的机会**，精确记录错失机会概率。
+
+### 阶段三：底层悲观撮合机制防爆审查 (Phase 3)
+必须通过 `src/smc_pessimistic_engine.py` 进行真实性审查：
+1. **严格盘口穿透挂单**: 买单成交必须满足 `Low < LimitPrice - 0.05 * ATR`，消除排队与逆向选择幻觉；
+2. **同 Bar 极端悲观裁决**: 单根 K 线同时触及 TP 与 SL，**强制判定先止损出局**；
+3. **动态恐慌滑点**: 止损市价单滑点与 K 线实体波幅联动放大。
+
+### 阶段四：防过拟合审查与盲测验证铁律 (Phase 4)
+1. **严禁根据交易记录倒推规则**: 交易记录仅用于查错，绝不用于挑品种或加事后特判过滤；
+2. **事前理论约束单调性检验**: 随着 Credal 认识不确定度 $u$ 增加，盲测表现必须严格单调恶化，方证明约束具备物理意义；
+3. **白帽数学不变性**: 100% 通过未来时序打乱零前瞻测试与复式记账平衡守恒测试。
+
+### 阶段五：GitHub 自动化产物交付 (Phase 5)
+智能体交付物第一段必须填写 [`docs/workflow/AGENT_CONVERGENCE_TEMPLATE.md`](docs/workflow/AGENT_CONVERGENCE_TEMPLATE.md)，明确判定为【终局 1】或【终局 2】。
+
+---
+
+## 📁 核心资产索引
+
+- **最高行动宪法**: [`docs/workflow/AGENT_DIRECTIVE.md`](docs/workflow/AGENT_DIRECTIVE.md)
+- **终局判定模板**: [`docs/workflow/AGENT_CONVERGENCE_TEMPLATE.md`](docs/workflow/AGENT_CONVERGENCE_TEMPLATE.md)
+- **工作流全景规范**: [`docs/workflow/QUANT_RESEARCH_WORKFLOW.md`](docs/workflow/QUANT_RESEARCH_WORKFLOW.md)
+- **量化 AI 不变量记忆库**: [`.field-guide/quant_ai_invariants.md`](.field-guide/quant_ai_invariants.md)
+- **悲观撮合执行引擎**: [`src/smc_pessimistic_engine.py`](src/smc_pessimistic_engine.py)
+- **时序双资金回测器**: [`crypto_capital_models_runner.py`](crypto_capital_models_runner.py)
