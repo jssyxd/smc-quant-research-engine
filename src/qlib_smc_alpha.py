@@ -51,7 +51,7 @@ class QlibSMCConfig:
     slow_ema_period: int = 50
     macro_ema_period: int = 200
     use_ema200_filter: bool = True
-    fvg_min_atr_mult: float = 0.10
+    fvg_min_atr_mult: float = 0.20
     min_score_threshold: float = 60.0
     use_credal_filter: bool = True
     credal_u_max: float = 0.35
