@@ -49,6 +49,8 @@ class QlibSMCConfig:
     atr_ratio_max: float = 1.80
     fast_ema_period: int = 20
     slow_ema_period: int = 50
+    macro_ema_period: int = 200
+    use_ema200_filter: bool = True
     fvg_min_atr_mult: float = 0.10
     min_score_threshold: float = 60.0
     use_credal_filter: bool = True
@@ -343,12 +345,14 @@ def compute_ema_trend(
     df: pd.DataFrame,
     fast_period: int = 20,
     slow_period: int = 50,
+    macro_period: int = 200,
 ) -> pd.DataFrame:
-    """Compute multi-scale EMA trend alignment: EMA20 > EMA50."""
+    """Compute multi-scale EMA trend alignment: EMA20, EMA50, and macro EMA200."""
     _, _, _, close, _, index = _extract_ohlcv(df)
     s_close = pd.Series(close, index=index)
     ema20 = s_close.ewm(span=fast_period, adjust=False).mean()
     ema50 = s_close.ewm(span=slow_period, adjust=False).mean()
+    ema200 = s_close.ewm(span=macro_period, adjust=False).mean()
 
     trend_up = ema20 > ema50
     trend_down = ema20 < ema50
@@ -357,6 +361,7 @@ def compute_ema_trend(
         {
             "ema20": ema20.to_numpy(),
             "ema50": ema50.to_numpy(),
+            "ema200": ema200.to_numpy(),
             "trend_up": trend_up.to_numpy(),
             "trend_down": trend_down.to_numpy(),
         },
@@ -420,6 +425,7 @@ def extract_qlib_smc_features(
         res,
         fast_period=config.fast_ema_period,
         slow_period=config.slow_ema_period,
+        macro_period=config.macro_ema_period,
     )
     for col in ema_df.columns:
         res[col] = ema_df[col].to_numpy()
@@ -573,6 +579,10 @@ def generate_qlib_smc_signals(
         long_trigger = long_trigger & (~credal_abstain) & (b_bull > b_bear)
         short_trigger = short_trigger & (~credal_abstain) & (b_bear > b_bull)
 
+    if config.use_ema200_filter and "ema200" in feats.columns:
+        e200 = feats["ema200"].to_numpy(dtype=float)
+        long_trigger = long_trigger & (close > e200)
+        short_trigger = short_trigger & (close < e200)
     signal = np.zeros(n, dtype=int)
     signal[long_trigger] = 1
     signal[short_trigger] = -1
