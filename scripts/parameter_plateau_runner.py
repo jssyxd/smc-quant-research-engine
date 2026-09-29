@@ -76,7 +76,7 @@ def run_parameter_grid_cell_fast(
             rr_tp1=1.5,
             rr_tp2=3.0,
             use_credal=True,
-            credal_u_max=0.55,
+            credal_u_max=0.45,
         )
         res = engine.run(df_sig)
         for t in res["trades"]:
