@@ -176,7 +176,7 @@ class Round2SMCEngine:
         rr_tp2: float = 3.5,
         early_be_rr: float = 1.0,
         early_be_buffer_atr: float = 0.15,
-        limit_order_expiry_bars: int = 3,
+        limit_order_expiry_bars: int = 4,
         use_credal: bool = True,
         credal_u_max: float = 0.35,
         credal_delta: float = 0.15,
