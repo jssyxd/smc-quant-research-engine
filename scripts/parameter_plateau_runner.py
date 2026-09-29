@@ -62,7 +62,7 @@ def run_parameter_grid_cell_fast(
     for sym, feats_df in cached_feats.items():
         df_sig = feats_df.copy()
         mask_long = (df_sig["score_long"] >= score_thresh) & (df_sig["signal"] == 1)
-        mask_short = (df_sig["score_short"] >= score_thresh) & (df_sig["signal"] == -1)
+        mask_short = (df_sig["score_short"] >= (score_thresh + 5.0)) & (df_sig["signal"] == -1)
         df_sig["signal"] = np.where(mask_long, 1, np.where(mask_short, -1, 0))
 
         engine = Round2SMCEngine(
