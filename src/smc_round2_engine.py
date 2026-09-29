@@ -550,11 +550,11 @@ class Round2SMCEngine:
                 # 2D. Early BE Check before TP1: if price reaches early threshold, shift SL to entry +- 0.15*atr
                 if not closed and active_position is not None and not pos.early_be_triggered:
                     stop_dist = abs(pos.entry_price - pos.stop_loss)
-                    # Use 0.7R as default early BE threshold if price makes headway
-                    if pos.side == PositionSide.LONG and (high - pos.entry_price) >= 0.7 * stop_dist:
+                    # Let 1h/4h swings breathe: trigger early BE at 1.0R headway
+                    if pos.side == PositionSide.LONG and (high - pos.entry_price) >= 1.0 * stop_dist:
                         pos.stop_loss = pos.entry_price + self.early_be_buffer_atr * atr
                         pos.early_be_triggered = True
-                    elif pos.side == PositionSide.SHORT and (pos.entry_price - low) >= 0.7 * stop_dist:
+                    elif pos.side == PositionSide.SHORT and (pos.entry_price - low) >= 1.0 * stop_dist:
                         pos.stop_loss = pos.entry_price - self.early_be_buffer_atr * atr
                         pos.early_be_triggered = True
 
