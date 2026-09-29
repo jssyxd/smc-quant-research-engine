@@ -73,7 +73,7 @@ def run_parameter_grid_cell_fast(
             risk_pct=1.0,
             use_compound=True,
             sl_atr_mult=atr_mult,
-            rr_tp1=1.5,
+            rr_tp1=1.0 if timeframe == "4h" else 1.5,
             rr_tp2=3.0,
             use_credal=True,
             credal_u_max=0.45,
