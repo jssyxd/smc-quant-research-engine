@@ -171,6 +171,7 @@ class Round2SMCEngine:
         risk_pct: float = 2.0,
         use_compound: bool = True,
         max_leverage: float = 4.0,
+        sl_atr_mult: float = 1.5,
         rr_tp1: float = 1.5,
         rr_tp2: float = 3.5,
         early_be_buffer_atr: float = 0.15,
@@ -186,6 +187,7 @@ class Round2SMCEngine:
         self.risk_pct = float(risk_pct)
         self.use_compound = bool(use_compound)
         self.max_leverage = float(max_leverage)
+        self.sl_atr_mult = float(sl_atr_mult)
         self.rr_tp1 = float(rr_tp1)
         self.rr_tp2 = float(rr_tp2)
         self.early_be_buffer_atr = float(early_be_buffer_atr)
@@ -590,7 +592,7 @@ class Round2SMCEngine:
                         if sl_series is not None and not np.isnan(sl_series[idx]):
                             sl_val = float(sl_series[idx])
                         else:
-                            sl_val = (limit_px - 1.5 * atr) if is_long else (limit_px + 1.5 * atr)
+                            sl_val = (limit_px - self.sl_atr_mult * atr) if is_long else (limit_px + self.sl_atr_mult * atr)
 
                         stop_dist = abs(limit_px - sl_val)
 
@@ -598,7 +600,6 @@ class Round2SMCEngine:
                             tp1_val = float(tp1_series[idx])
                         else:
                             tp1_val = (limit_px + self.rr_tp1 * stop_dist) if is_long else (limit_px - self.rr_tp1 * stop_dist)
-
                         if tp2_series is not None and not np.isnan(tp2_series[idx]):
                             tp2_val = float(tp2_series[idx])
                         else:
