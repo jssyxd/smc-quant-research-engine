@@ -174,6 +174,7 @@ class Round2SMCEngine:
         sl_atr_mult: float = 1.5,
         rr_tp1: float = 1.5,
         rr_tp2: float = 3.5,
+        early_be_rr: float = 1.0,
         early_be_buffer_atr: float = 0.15,
         limit_order_expiry_bars: int = 3,
         use_credal: bool = True,
@@ -190,6 +191,7 @@ class Round2SMCEngine:
         self.sl_atr_mult = float(sl_atr_mult)
         self.rr_tp1 = float(rr_tp1)
         self.rr_tp2 = float(rr_tp2)
+        self.early_be_rr = float(early_be_rr)
         self.early_be_buffer_atr = float(early_be_buffer_atr)
         self.limit_order_expiry_bars = int(limit_order_expiry_bars)
         self.use_credal = bool(use_credal)
@@ -550,11 +552,11 @@ class Round2SMCEngine:
                 # 2D. Early BE Check before TP1: if price reaches early threshold, shift SL to entry +- 0.15*atr
                 if not closed and active_position is not None and not pos.early_be_triggered:
                     stop_dist = abs(pos.entry_price - pos.stop_loss)
-                    # Let 1h/4h swings breathe: trigger early BE at 1.0R headway
-                    if pos.side == PositionSide.LONG and (high - pos.entry_price) >= 1.0 * stop_dist:
+                    # Let swings breathe: trigger early BE at self.early_be_rr * stop_dist
+                    if pos.side == PositionSide.LONG and (high - pos.entry_price) >= self.early_be_rr * stop_dist:
                         pos.stop_loss = pos.entry_price + self.early_be_buffer_atr * atr
                         pos.early_be_triggered = True
-                    elif pos.side == PositionSide.SHORT and (pos.entry_price - low) >= 1.0 * stop_dist:
+                    elif pos.side == PositionSide.SHORT and (pos.entry_price - low) >= self.early_be_rr * stop_dist:
                         pos.stop_loss = pos.entry_price - self.early_be_buffer_atr * atr
                         pos.early_be_triggered = True
 

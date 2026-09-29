@@ -42,7 +42,7 @@ class QlibSMCConfig:
 
     swing_len: int = 5
     vol_sma_period: int = 20
-    vol_spike_threshold: float = 1.2
+    vol_spike_threshold: float = 1.4
     atr_fast_period: int = 14
     atr_slow_period: int = 100
     atr_ratio_min: float = 0.55
