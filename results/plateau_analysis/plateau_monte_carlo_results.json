@@ -1,5 +1,5 @@
 {
-  "simulation": "2000-Path Monte Carlo Bootstrap Resampling on SMC Core Parameter Plateau (Run 16 Optimized)",
+  "simulation": "2000-Path Monte Carlo Bootstrap Resampling on SMC Core Parameter Plateau (Run 17 Optimized)",
   "year": 2024,
   "universe": [
     "BTC",
@@ -11,16 +11,16 @@
   ],
   "capital_regime": "Shared Portfolio ,000, max 2 concurrent positions, >=50% cash reserve",
   "metrics": {
-    "total_trades": 58,
-    "win_rate_pct": 53.45,
-    "total_pnl_usd": 117.02,
-    "median_terminal_wealth_usd": 1113.69,
-    "median_return_pct": 11.37,
-    "percentile_5_return_pct": -5.77,
-    "percentile_95_return_pct": 28.17,
-    "median_max_drawdown_pct": 6.51,
-    "percentile_95_max_drawdown_pct": 13.51,
-    "percentile_99_max_drawdown_pct": 17.7,
+    "total_trades": 65,
+    "win_rate_pct": 55.38,
+    "total_pnl_usd": 121.65,
+    "median_terminal_wealth_usd": 1123.96,
+    "median_return_pct": 12.4,
+    "percentile_5_return_pct": -4.63,
+    "percentile_95_return_pct": 29.51,
+    "median_max_drawdown_pct": 6.43,
+    "percentile_95_max_drawdown_pct": 13.74,
+    "percentile_99_max_drawdown_pct": 17.88,
     "probability_of_ruin_pct": 0.0
   }
 }
