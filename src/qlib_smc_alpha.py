@@ -588,9 +588,14 @@ def generate_qlib_smc_signals(
     limit_entry_px = np.full(n, np.nan, dtype=float)
 
     for i in range(n):
+        c = close[i]
+        h = high[i]
+        l = low[i]
+        bar_rng = h - l
+        
         if signal[i] == 1:
-            # Discount zone selection
-            c = close[i]
+            # OTE (Optimal Trade Entry) Discount zone: 0.62 ~ 0.79 retracement of swing/candle
+            ote_px = h - 0.62 * bar_rng if bar_rng > 0 else c
             target_px = np.nan
             if bull_ob[i] and not np.isnan(bull_ob_level[i]) and bull_ob_level[i] <= c:
                 target_px = bull_ob_level[i]
@@ -598,18 +603,14 @@ def generate_qlib_smc_signals(
                 target_px = fvg_level[i]
             elif not np.isnan(bull_ob_level[i]) and bull_ob_level[i] <= c:
                 target_px = bull_ob_level[i]
-            elif not np.isnan(fvg_level[i]) and fvg_level[i] <= c:
-                target_px = fvg_level[i]
             else:
-                # 50% equilibrium of current candle body/range
-                target_px = (high[i] + low[i]) / 2.0
+                target_px = min(c, ote_px)
 
-            # Enforce Maker resting bid: limit price must be <= Close
             limit_entry_px[i] = min(c, target_px if not np.isnan(target_px) else c)
 
         elif signal[i] == -1:
-            # Premium zone selection
-            c = close[i]
+            # OTE Premium zone: 0.62 retracement upwards from low
+            ote_px = l + 0.62 * bar_rng if bar_rng > 0 else c
             target_px = np.nan
             if bear_ob[i] and not np.isnan(bear_ob_level[i]) and bear_ob_level[i] >= c:
                 target_px = bear_ob_level[i]
@@ -617,15 +618,10 @@ def generate_qlib_smc_signals(
                 target_px = fvg_level[i]
             elif not np.isnan(bear_ob_level[i]) and bear_ob_level[i] >= c:
                 target_px = bear_ob_level[i]
-            elif not np.isnan(fvg_level[i]) and fvg_level[i] >= c:
-                target_px = fvg_level[i]
             else:
-                # 50% equilibrium of current candle body/range
-                target_px = (high[i] + low[i]) / 2.0
+                target_px = max(c, ote_px)
 
-            # Enforce Maker resting ask: limit price must be >= Close
             limit_entry_px[i] = max(c, target_px if not np.isnan(target_px) else c)
-
     feats["score_long"] = score_long
     feats["score_short"] = score_short
     feats["signal"] = signal
