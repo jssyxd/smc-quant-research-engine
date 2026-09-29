@@ -75,6 +75,7 @@ def run_parameter_grid_cell_fast(
             sl_atr_mult=atr_mult,
             rr_tp1=1.0 if timeframe == "4h" else 1.5,
             rr_tp2=3.0,
+            early_be_buffer_atr=0.30,
             use_credal=True,
             credal_u_max=0.45,
         )
